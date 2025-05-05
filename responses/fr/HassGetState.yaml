@@ -103,27 +103,31 @@ responses:
         {% endif %}
 
       which: |
+        {% set etat = {
+          "on": "allumé",
+          "off": "éteint",
+          "unavailable": "indisponible",
+          "unknown": "inconnu"
+        } %}
         {% if not query.matched %}
           Aucun appareil
-        {% else: %}
+        {% else %}
           {% set match = query.matched | map(attribute="name") | sort | list %}
-          {% set count_match = match | length | int %}
-          {% if match | count > 4 %}
-            {{ match[:3] | join(", ") }} et {{ (match | length - 3) }} autres
-          {% elif match | count == 1 %}
-            {% for name in match %}
-              {% if not loop.first and not loop.last %}, {% elif loop.last and not loop.first %} et {% endif -%}
-              {{ name }}
-            {% endfor %}
-            est {{ state.state_with_unit }}
+          {% set count_match = match | length %}
+          {% set state_text = etat.get(state.state, state.state_with_unit) %}
+
+          {% if count_match > 4 %}
+            {{ match[:3] | join(", ") }} et {{ count_match - 3 }} autres sont {{ state_text }}s
+          {% elif count_match == 1 %}
+            {{ match[0] }} est {{ state_text }}
           {% else %}
             {% for name in match %}
-              {% if not loop.first and not loop.last %}, {% elif loop.last and not loop.first %} et {% endif -%}
+              {% if not loop.first and not loop.last %}, {% elif loop.last %} et {% endif %}
               {{ name }}
             {% endfor %}
-            sont {{ state.state_with_unit }}s
+            sont {{ state_text }}s
           {% endif %}
-        {% endif %}
+        {% endif %}      
 
       which_person: |
         {% if not query.matched %}
